@@ -213,7 +213,8 @@ const Checkout = ({ clearCart, user, authLoading }) => {
         setShowModal(true);
         clearInterval(interval);
       }
-    }, 2000);
+    }
+  }, 2000);
 
     return () => clearInterval(interval);
   }, [currentOrderId, isProcessing, formData.email, clearCart]);
