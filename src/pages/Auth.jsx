@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiMail, FiLock, FiUser, FiArrowRight, FiGithub } from 'react-icons/fi';
 import { FaGoogle } from 'react-icons/fa';
 import { auth, googleProvider } from '../firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithRedirect } from 'firebase/auth';
 
 const Auth = ({ handleLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,6 +11,21 @@ const Auth = ({ handleLogin }) => {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
+
+  // Redirect to products if user is already logged in (e.g. after redirect back from Google)
+  React.useEffect(() => {
+    import('../firebase').then(({ auth }) => {
+      import('firebase/auth').then(({ onAuthStateChanged }) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          if (user) {
+            if (handleLogin) handleLogin();
+            navigate('/products');
+          }
+        });
+        return unsubscribe;
+      });
+    });
+  }, [navigate, handleLogin]);
 
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
@@ -35,9 +50,7 @@ const Auth = ({ handleLogin }) => {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
-      if (handleLogin) handleLogin();
-      navigate('/products');
+      await signInWithRedirect(auth, googleProvider);
     } catch (error) {
       setErrorMsg(error.message);
     }
