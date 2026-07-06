@@ -84,7 +84,7 @@ const Checkout = ({ clearCart, user, authLoading }) => {
     // Save to Database
     const isVpnProduct = productName.toLowerCase().includes('vpn') || productName.toLowerCase().includes('surfshark');
     
-    const orderId = await saveOrder({
+    const result = await saveOrder({
       orderType: isVpnProduct ? 'vpn' : 'card',
       email: formData.email,
       paymentMethod: formData.paymentMethod,
@@ -94,12 +94,13 @@ const Checkout = ({ clearCart, user, authLoading }) => {
       items: hasItems ? items : []
     });
     
-    if (!orderId) {
-      setErrorMsg("Error: Server is down or could not save the order! Make sure the backend server (json-server) is running.");
+    if (!result || result.error) {
+      setErrorMsg(`Database Error: ${result?.error || "Could not save order. Please check Firebase rules or internet connection."}`);
       setIsProcessing(false);
       return;
     }
     
+    const orderId = result;
     setCurrentOrderId(orderId);
 
     // Save pending order to localStorage immediately
@@ -212,7 +213,8 @@ const Checkout = ({ clearCart, user, authLoading }) => {
         setShowModal(true);
         clearInterval(interval);
       }
-    }, 2000);
+    }
+  }, 2000);
 
     return () => clearInterval(interval);
   }, [currentOrderId, isProcessing, formData.email, clearCart]);
