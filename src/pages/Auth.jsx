@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiMail, FiLock, FiUser, FiArrowRight, FiGithub } from 'react-icons/fi';
 import { FaGoogle } from 'react-icons/fa';
 import { auth, googleProvider } from '../firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithRedirect } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithRedirect, signOut } from 'firebase/auth';
 
 const Auth = ({ handleLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -38,13 +38,24 @@ const Auth = ({ handleLogin }) => {
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password);
+        if (handleLogin) handleLogin();
+        navigate('/products');
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
+        // Automatically sign out after sign up to force manual login for security
+        await signOut(auth);
+        setIsLogin(true); // switch to login mode
+        alert('অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে! দয়া করে আপনার নতুন অ্যাকাউন্ট দিয়ে লগ ইন করুন।');
+        setPassword('');
       }
-      if (handleLogin) handleLogin();
-      navigate('/products');
     } catch (error) {
-      setErrorMsg(error.message);
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/invalid-login-credentials' || error.code === 'auth/wrong-password') {
+        setErrorMsg('এই ইমেইল দিয়ে কোনো অ্যাকাউন্ট পাওয়া যায়নি অথবা পাসওয়ার্ড ভুল। আপনি যদি নতুন হয়ে থাকেন তবে আগে অ্যাকাউন্ট তৈরি করুন।');
+      } else if (error.code === 'auth/email-already-in-use') {
+        setErrorMsg('এই ইমেইল দিয়ে ইতিমধ্যেই একটি অ্যাকাউন্ট খোলা আছে। দয়া করে লগ ইন করুন।');
+      } else {
+        setErrorMsg(error.message);
+      }
     }
   };
 

@@ -2,13 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import { FiMessageCircle, FiX, FiSend } from 'react-icons/fi';
 
 const botResponses = [
-  { keywords: ['vpn', 'surfshark', 'expressvpn', 'nordvpn'], response: 'We offer premium VPNs like Surfshark, ExpressVPN, and NordVPN at cheap rates. Check our Products page!' },
-  { keywords: ['card', 'mastercard', 'payment'], response: 'We have virtual mastercards available for international payments, FB boosting, and app trials.' },
-  { keywords: ['buy', 'order', 'purchase', 'how'], response: 'You can order directly from our website! Just add items to cart, checkout, and pay via bKash/Nagad. The details will be sent to your dashboard automatically.' },
-  { keywords: ['track', 'status', 'pending'], response: 'You can track your order status in the "Track Order" or "My Orders" page. Most orders are approved within minutes!' },
-  { keywords: ['hi', 'hello', 'hey'], response: 'Hello! Welcome to Orni Store. How can I help you today?' },
-  { keywords: ['youtube', 'premium'], response: 'We provide YouTube Premium upgrades to your own email account. It is fast and secure!' },
-  { keywords: ['whatsapp', 'contact', 'admin'], response: 'I am your automated virtual assistant! You can find most answers right here. What do you need help with?' }
+  { keywords: ['vpn', 'ভি পি এন', 'ভিপিএন', 'surfshark', 'expressvpn', 'nordvpn'], response: 'আমাদের কাছে Surfshark, ExpressVPN, এবং NordVPN এর মতো প্রিমিয়াম ভিপিএন আছে একদম সুলভ মূল্যে! আপনি "Products" পেজ থেকে এগুলো খুব সহজেই কিনে নিতে পারবেন। 😊' },
+  { keywords: ['card', 'কার্ড', 'mastercard', 'মাস্টারকার্ড', 'payment'], response: 'আপনার কি ইন্টারন্যাশনাল পেমেন্ট বা ফেসবুক বুস্টিং এর জন্য কার্ড লাগবে? আমাদের কাছে বিভিন্ন ভার্চুয়াল মাস্টারকার্ড এভেইলেবল আছে। আপনি চাইলে এখনই ওয়েবসাইট থেকে অর্ডার করতে পারেন! 💳' },
+  { keywords: ['buy', 'order', 'কিনবো', 'অর্ডার', 'purchase', 'how', 'কিভাবে'], response: 'অর্ডার করা খুবই সহজ! আপনি যে প্রোডাক্টটি নিতে চান তা কার্টে অ্যাড করুন এবং চেকআউট থেকে বিকাশ বা নগদের মাধ্যমে পেমেন্ট করে দিন। কিছুক্ষণের মধ্যেই ড্যাশবোর্ডে আপনার প্রোডাক্টের ডিটেইলস চলে আসবে। 🎉' },
+  { keywords: ['track', 'status', 'অবস্থা', 'পেন্ডিং', 'pending'], response: 'আপনার অর্ডারের বর্তমান অবস্থা জানতে ওয়েবসাইটের "Track Order" অথবা "My Orders" পেজে যেতে পারেন। সাধারণত কয়েক মিনিটের মধ্যেই সব অর্ডার অ্যাপ্রুভ হয়ে যায়! ⏳' },
+  { keywords: ['hi', 'hello', 'hey', 'হ্যালো', 'হাই'], response: 'হ্যালো! Orni Store-এ আপনাকে স্বাগতম। আমি Orni, আপনার ভার্চুয়াল অ্যাসিস্ট্যান্ট। আমি আপনাকে কীভাবে সাহায্য করতে পারি? ❤️' },
+  { keywords: ['youtube', 'premium', 'ইউটিউব', 'প্রিমিয়াম'], response: 'আমরা আপনার নিজের জিমেইল অ্যাকাউন্টে ইউটিউব প্রিমিয়াম আপগ্রেড করে দিই! এটি ১০০% নিরাপদ এবং খুব দ্রুত ডেলিভারি দেওয়া হয়। 🚀' },
+  { keywords: ['product', 'প্রোডাক্ট', 'পণ্য', 'কি কি'], response: 'আমাদের স্টোরে আপনি পাবেন সব ধরনের প্রিমিয়াম ভিপিএন, ভার্চুয়াল মাস্টারকার্ড এবং ইউটিউব প্রিমিয়াম সাবস্ক্রিপশন! আপনার কোনটা প্রয়োজন আমাকে বলতে পারেন। 🛍️' },
+  { keywords: ['whatsapp', 'contact', 'admin', 'যোগাযোগ', 'অ্যাডমিন', 'হোয়াটসঅ্যাপ'], response: 'আমি Orni, আপনার অটোমেটেড অ্যাসিস্ট্যান্ট! আপনার বেশিরভাগ প্রশ্নের উত্তর আমি এখানেই দিয়ে দিতে পারব। আপনার কি জানার আছে আমাকে বলুন। 😊' }
 ];
 
 const getBotResponse = (message) => {
@@ -18,13 +19,13 @@ const getBotResponse = (message) => {
       return item.response;
     }
   }
-  return "Thanks for reaching out! Please explore our website for more details, or let me know if you have a specific question about our products (VPNs, Cards, YouTube Premium).";
+  return "আপনাকে অসংখ্য ধন্যবাদ মেসেজ করার জন্য! দয়া করে ওয়েবসাইট থেকে আমাদের প্রোডাক্টগুলো (VPNs, Cards, YouTube Premium) ঘুরে দেখতে পারেন অথবা নির্দিষ্ট কোনো প্রশ্ন থাকলে আমাকে জিজ্ঞেস করতে পারেন। আমি আনন্দের সাথে সাহায্য করব! ✨";
 };
 
 const LiveSupport = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { sender: 'bot', text: 'Hi there! 👋 I am your automated assistant. How can I help you today?' }
+    { sender: 'bot', text: 'হ্যালো! 👋 আমি Orni, আপনার অটোমেটেড অ্যাসিস্ট্যান্ট। আমি আপনাকে কীভাবে সাহায্য করতে পারি?' }
   ]);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
