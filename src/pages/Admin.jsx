@@ -53,8 +53,7 @@ const Admin = ({ user, authLoading }) => {
   const filteredOrders = orders.filter(order => {
     const isYouTube = order.product === 'YouTube Premium';
     const isVpn = !isYouTube && (order.orderType === 'vpn' || 
-      (order.product && !order.product.toLowerCase().includes('mastercard') && 
-      (order.product.toLowerCase().includes('vpn') || order.product.toLowerCase().includes('surfshark'))));
+      (order.product && (order.product.toLowerCase().includes('vpn') || order.product.toLowerCase().includes('surfshark'))));
     
     if (activeTab === 'youtube') return isYouTube;
     if (activeTab === 'vpn') return isVpn;
@@ -157,7 +156,14 @@ const Admin = ({ user, authLoading }) => {
                     <FiClock style={{ color: 'var(--secondary-color)' }}/> Order #{String(order.id).slice(-6)}
                   </h3>
                   <div style={{ color: '#cbd5e1', marginBottom: '8px' }}><strong>Email:</strong> {order.email}</div>
-                  <div style={{ color: '#cbd5e1', marginBottom: '8px' }}><strong>Product:</strong> {order.product}</div>
+                  <div style={{ color: '#cbd5e1', marginBottom: '8px' }}>
+                    <strong>Product:</strong> {order.product}
+                    {order.items && order.items.length > 0 && (
+                      <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '5px', paddingLeft: '10px', borderLeft: '2px solid rgba(255,255,255,0.1)' }}>
+                        {order.items.map((it, idx) => <div key={idx}>- {it.title}</div>)}
+                      </div>
+                    )}
+                  </div>
                   <div style={{ color: '#cbd5e1', marginBottom: '8px' }}><strong>Payment:</strong> <span style={{textTransform:'capitalize'}}>{order.paymentMethod}</span></div>
                   <div style={{ color: '#0ea5e9', marginBottom: '8px', fontSize: '1.1rem' }}><strong>TrxID:</strong> {order.trxId}</div>
                   <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '15px' }}>{new Date(order.createdAt).toLocaleString()}</div>

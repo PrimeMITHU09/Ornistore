@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FiCheckCircle, FiShield, FiAlertTriangle, FiCopy } from 'react-icons/fi';
-import { saveOrder, getOrderById } from '../utils/db';
+import { saveOrder, getOrderById, updateOrder } from '../utils/db';
 
 const Checkout = ({ clearCart, user, authLoading }) => {
 
@@ -31,6 +31,9 @@ const Checkout = ({ clearCart, user, authLoading }) => {
   const [virtualCard, setVirtualCard] = useState(null);
   const [approvedVpnDetails, setApprovedVpnDetails] = useState(null);
   const [currentOrderId, setCurrentOrderId] = useState(null);
+  const [liveOrder, setLiveOrder] = useState(null);
+  const [user2faInput, setUser2faInput] = useState('');
+  const [youtubeSuccess, setYoutubeSuccess] = useState(null);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -79,8 +82,7 @@ const Checkout = ({ clearCart, user, authLoading }) => {
     setIsProcessing(true);
     
     // Save to Database
-    const isVpnProduct = !productName.toLowerCase().includes('mastercard') && 
-                         (productName.toLowerCase().includes('vpn') || productName.toLowerCase().includes('surfshark'));
+    const isVpnProduct = productName.toLowerCase().includes('vpn') || productName.toLowerCase().includes('surfshark');
     
     const orderId = await saveOrder({
       orderType: isVpnProduct ? 'vpn' : 'card',
@@ -88,7 +90,8 @@ const Checkout = ({ clearCart, user, authLoading }) => {
       paymentMethod: formData.paymentMethod,
       senderNumber: formData.senderNumber,
       trxId: formData.trxId,
-      product: productName
+      product: productName,
+      items: hasItems ? items : []
     });
     
     if (!orderId) {
@@ -111,10 +114,17 @@ const Checkout = ({ clearCart, user, authLoading }) => {
       createdAt: new Date().toISOString(),
       cardData: null,
       vpnData: null,
+      items: hasItems ? items : []
     });
 
+    // Format WhatsApp text to include specific items if from cart
+    let productsListText = productName;
+    if (hasItems && items.length > 1) {
+      productsListText += `\nItems:\n` + items.map(i => `- ${i.title}`).join('\n');
+    }
+
     // Open WhatsApp
-    const waText = encodeURIComponent(`Hello Admin, I have made a payment for ${productName}.\n\nPayment Method: ${formData.paymentMethod}\nSender Number: ${formData.senderNumber}\nTrxID: ${formData.trxId}\nEmail: ${formData.email}\n\nPlease approve my order!`);
+    const waText = encodeURIComponent(`Hello Admin, I have made a payment for ${productsListText}.\n\nPayment Method: ${formData.paymentMethod}\nSender Number: ${formData.senderNumber}\nTrxID: ${formData.trxId}\nEmail: ${formData.email}\n\nPlease approve my order!`);
     window.open(`https://wa.me/8801864339154?text=${waText}`, '_blank');
   };
 
@@ -124,32 +134,52 @@ const Checkout = ({ clearCart, user, authLoading }) => {
 
     const interval = setInterval(async () => {
       const order = await getOrderById(currentOrderId);
-      if (order && order.status === 'approved') {
-        setIsProcessing(false);
-        const vpnInfo = order.vpnDetails || (order.cardDetails && order.cardDetails.vpnDetails);
-        
-        if (vpnInfo) {
-          setVirtualCard(null);
-          setApprovedVpnDetails(vpnInfo);
-          // Save approved VPN order to localStorage
-          saveOrderToLocal({
-            orderId: currentOrderId,
-            product: order.product || productName,
-            type: 'vpn',
-            email: order.email || formData.email,
-            paymentMethod: order.paymentMethod || formData.paymentMethod,
-            trxId: order.trxId || formData.trxId,
-            status: 'approved',
-            createdAt: order.createdAt,
-            cardData: null,
-            vpnData: vpnInfo,
-          });
-        } else if (order.cardDetails || order.orderType === 'card') {
-          setApprovedVpnDetails(null);
+      if (order) {
+        setLiveOrder(order);
+        if (order.status === 'approved') {
+          setIsProcessing(false);
+          const vpnInfo = order.vpnDetails || (order.cardDetails && order.cardDetails.vpnDetails);
           
-          const actualCardDetails = (order.cardDetails && order.cardDetails.cardDetails) 
-            ? order.cardDetails.cardDetails 
-            : order.cardDetails;
+          if (vpnInfo) {
+            setVirtualCard(null);
+            setYoutubeSuccess(null);
+            setApprovedVpnDetails(vpnInfo);
+            // Save approved VPN order to localStorage
+            saveOrderToLocal({
+              orderId: currentOrderId,
+              product: order.product || productName,
+              type: 'vpn',
+              email: order.email || formData.email,
+              paymentMethod: order.paymentMethod || formData.paymentMethod,
+              trxId: order.trxId || formData.trxId,
+              status: 'approved',
+              createdAt: order.createdAt,
+              cardData: null,
+              vpnData: vpnInfo,
+            });
+          } else if (order.product && order.product.toLowerCase().includes('youtube')) {
+            setVirtualCard(null);
+            setApprovedVpnDetails(null);
+            setYoutubeSuccess(order.customMessage || "Your YouTube Premium is ready!");
+            saveOrderToLocal({
+              orderId: currentOrderId,
+              product: order.product || productName,
+              type: 'youtube',
+              email: order.email || formData.email,
+              paymentMethod: order.paymentMethod || formData.paymentMethod,
+              trxId: order.trxId || formData.trxId,
+              status: 'approved',
+              createdAt: order.createdAt,
+              cardData: null,
+              vpnData: null,
+            });
+          } else if (order.cardDetails || order.orderType === 'card') {
+            setApprovedVpnDetails(null);
+            setYoutubeSuccess(null);
+            
+            const actualCardDetails = (order.cardDetails && order.cardDetails.cardDetails) 
+              ? order.cardDetails.cardDetails 
+              : order.cardDetails;
             
           if (actualCardDetails) {
             const cardObj = {
@@ -258,6 +288,29 @@ const Checkout = ({ clearCart, user, authLoading }) => {
             <button type="submit" disabled={isProcessing} className="btn btn-primary" style={{ padding: '15px', fontSize: '1.1rem', marginTop: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               {isProcessing ? <><div className="spinner" style={{ marginRight: '10px' }}></div> Waiting for Admin Approval...</> : "Verify Payment"}
             </button>
+
+            {liveOrder && liveOrder.adminInstruction && !liveOrder.userConfirmedInstruction && (
+              <div style={{ marginTop: '20px', padding: '20px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid #0ea5e9', borderRadius: '10px', textAlign: 'center', animation: 'fadeIn 0.5s ease-out' }}>
+                <h3 style={{ color: '#0ea5e9', marginBottom: '10px' }}>Admin Instruction</h3>
+                <p style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '15px' }}>{liveOrder.adminInstruction}</p>
+                <button type="button" onClick={() => updateOrder(currentOrderId, { userConfirmedInstruction: true })} className="btn btn-primary" style={{ padding: '10px 20px', background: '#0ea5e9' }}>I have done this</button>
+              </div>
+            )}
+
+            {liveOrder && liveOrder.askForCode && !liveOrder.twoFaCode && (
+              <div style={{ marginTop: '20px', padding: '20px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', borderRadius: '10px', textAlign: 'center', animation: 'fadeIn 0.5s ease-out' }}>
+                <h3 style={{ color: '#ef4444', marginBottom: '10px' }}>Action Required: 2FA Code</h3>
+                <p style={{ color: '#cbd5e1', marginBottom: '15px' }}>Check your email/phone for a Google code and enter it below.</p>
+                <input type="text" value={user2faInput} onChange={e => setUser2faInput(e.target.value)} placeholder="G-123456" style={{ width: '100%', padding: '15px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', marginBottom: '15px', outline: 'none', textAlign: 'center', fontSize: '1.2rem', letterSpacing: '2px' }} />
+                <button type="button" onClick={() => { if(user2faInput) updateOrder(currentOrderId, { twoFaCode: user2faInput }); }} className="btn btn-primary" style={{ padding: '12px 30px', background: '#ef4444', border: 'none' }}>Submit Code</button>
+              </div>
+            )}
+            
+            {liveOrder && liveOrder.loginStatus === 'done' && (
+              <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '10px', textAlign: 'center', color: '#10b981', fontWeight: 'bold', animation: 'fadeIn 0.5s ease-out' }}>
+                ✅ Login successful! Admin is completing the setup...
+              </div>
+            )}
           </form>
         </div>
       </div>
@@ -354,6 +407,24 @@ const Checkout = ({ clearCart, user, authLoading }) => {
             </div>
 
             <button onClick={() => navigate('/')} className="btn btn-outline" style={{ marginTop: '30px', width: '100%', padding: '12px' }}>Return to Home</button>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal for YouTube Premium */}
+      {showModal && youtubeSuccess && (
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.5s ease-out' }}>
+          <div className="modal-content" style={{ background: 'var(--bg-color)', padding: '40px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '500px', width: '90%', textAlign: 'center', position: 'relative', animation: 'scaleUp 0.5s ease-out' }}>
+            <FiCheckCircle style={{ fontSize: '4rem', color: '#ef4444', marginBottom: '20px' }} />
+            <h2 style={{ color: '#fff', fontSize: '2rem', marginBottom: '10px' }}>YouTube Premium Activated!</h2>
+            <p style={{ color: '#94a3b8', marginBottom: '30px' }}>Your account has been successfully upgraded to Premium.</p>
+            
+            <div style={{ padding: '20px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '15px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+              <div dangerouslySetInnerHTML={{ __html: `"${youtubeSuccess}"` }} style={{ color: '#ef4444', fontStyle: 'italic', fontSize: '1.1rem', lineHeight: '1.6' }} />
+              <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '10px', fontWeight: 'bold' }}>- Orni Store Admin</div>
+            </div>
+
+            <button onClick={() => navigate('/')} className="btn btn-outline" style={{ marginTop: '30px', width: '100%', padding: '12px', borderColor: '#ef4444', color: '#ef4444' }}>Return to Home</button>
           </div>
         </div>
       )}

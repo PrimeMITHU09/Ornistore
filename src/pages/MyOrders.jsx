@@ -194,6 +194,11 @@ const MyOrders = ({ user, authLoading }) => {
                     </div>
                     <div className="myorders-card-info">
                       <h3 className="myorders-product-name">{order.product}</h3>
+                      {order.items && order.items.length > 0 && (
+                        <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '8px', paddingLeft: '5px', borderLeft: '2px solid rgba(255,255,255,0.1)' }}>
+                          {order.items.map((it, idx) => <div key={idx}>- {it.title}</div>)}
+                        </div>
+                      )}
                       <div className="myorders-meta">
                         <span>{getPaymentIcon(order.paymentMethod)} {order.paymentMethod}</span>
                         <span>•</span>
