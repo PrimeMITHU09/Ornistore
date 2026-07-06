@@ -12,18 +12,24 @@ export const getOrders = async () => {
 };
 
 export const saveOrder = async (order) => {
-  const newOrder = {
-    ...order,
-    status: 'pending',
-    createdAt: new Date().toISOString()
-  };
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(newOrder)
-  });
-  const data = await res.json();
-  return data.id;
+  try {
+    const newOrder = {
+      ...order,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newOrder)
+    });
+    if (!res.ok) throw new Error("Network response was not ok");
+    const data = await res.json();
+    return data.id;
+  } catch (error) {
+    console.error("Error saving order:", error);
+    return null;
+  }
 };
 
 export const getOrderById = async (id) => {

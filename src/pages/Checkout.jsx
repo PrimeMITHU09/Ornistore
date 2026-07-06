@@ -91,6 +91,12 @@ const Checkout = ({ clearCart, user, authLoading }) => {
       product: productName
     });
     
+    if (!orderId) {
+      setErrorMsg("Error: Server is down or could not save the order! Make sure the backend server (json-server) is running.");
+      setIsProcessing(false);
+      return;
+    }
+    
     setCurrentOrderId(orderId);
 
     // Save pending order to localStorage immediately
