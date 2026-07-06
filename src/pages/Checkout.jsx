@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FiCheckCircle, FiShield, FiAlertTriangle, FiCopy } from 'react-icons/fi';
 import { saveOrder, getOrderById } from '../utils/db';
 
-const Checkout = ({ clearCart, user }) => {
+const Checkout = ({ clearCart, user, authLoading }) => {
 
   // Helper: save order to localStorage for My Orders page
   const saveOrderToLocal = (orderData) => {
@@ -34,6 +34,25 @@ const Checkout = ({ clearCart, user }) => {
   
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  if (authLoading) {
+    return (
+      <div className="page-content" style={{ paddingTop: '120px', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="glass-panel" style={{ padding: '40px', borderRadius: '24px', textAlign: 'center', color: '#fff' }}>
+          Loading checkout...
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   const lockedNumber = "01864339154";
   

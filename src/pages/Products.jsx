@@ -1,8 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 
-const Products = ({ addToCart }) => {
+const Products = ({ addToCart, isLoggedIn }) => {
+  const navigate = useNavigate();
+
+  const handleBuyClick = (e, productName) => {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      alert("Please login or sign up first to purchase!");
+      navigate('/auth');
+    } else {
+      navigate('/checkout', { state: { product: productName } });
+    }
+  };
   const eventsData = [
     {
       id: 1,
@@ -136,7 +147,7 @@ const Products = ({ addToCart }) => {
                 <li>✨ Early access to beta features</li>
                 <li>✨ Seamless cloud synchronization</li>
               </ul>
-              <Link to="/checkout" state={{ product: "Any App Trials for Card" }} className="btn btn-primary" style={{ padding: '12px 30px', fontSize: '1.1rem', boxShadow: '0 10px 20px rgba(109, 40, 217, 0.3)' }}>Buy Cards</Link>
+              <a href="#" onClick={(e) => handleBuyClick(e, "Any App Trials for Card")} className="btn btn-primary" style={{ padding: '12px 30px', fontSize: '1.1rem', boxShadow: '0 10px 20px rgba(109, 40, 217, 0.3)' }}>Buy Cards</a>
             </div>
           </div>
 
@@ -154,7 +165,7 @@ const Products = ({ addToCart }) => {
                 <li>🔵 Exclusive premium stickers and reactions</li>
                 <li>🔵 VIP priority account support</li>
               </ul>
-              <Link to="/checkout" state={{ product: "Facebook Verified Badge" }} className="btn btn-primary" style={{ padding: '12px 30px', fontSize: '1.1rem', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.3)' }}>Buy Facebook Badge</Link>
+              <a href="#" onClick={(e) => handleBuyClick(e, "Facebook Verified Badge")} className="btn btn-primary" style={{ padding: '12px 30px', fontSize: '1.1rem', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.3)' }}>Buy Facebook Badge</a>
             </div>
           </div>
 
@@ -172,7 +183,7 @@ const Products = ({ addToCart }) => {
                 <li>🔒 Complete anonymity on public Wi-Fi</li>
                 <li>🔒 Access geo-blocked streaming services</li>
               </ul>
-              <Link to="/checkout" state={{ product: "Any VPN for Mastercard" }} className="btn btn-primary" style={{ padding: '12px 30px', fontSize: '1.1rem', boxShadow: '0 10px 20px rgba(16, 185, 129, 0.3)' }}>Buy Premium VPN</Link>
+              <a href="#" onClick={(e) => handleBuyClick(e, "Any VPN for Mastercard")} className="btn btn-primary" style={{ padding: '12px 30px', fontSize: '1.1rem', boxShadow: '0 10px 20px rgba(16, 185, 129, 0.3)' }}>Buy Premium VPN</a>
             </div>
           </div>
 
@@ -190,7 +201,7 @@ const Products = ({ addToCart }) => {
                 <li>🎮 Free access to top-tier paid games</li>
                 <li>🎮 Zero advertisements and no micro-transactions</li>
               </ul>
-              <Link to="/checkout" state={{ product: "Google Play Pass for Card" }} className="btn btn-primary" style={{ padding: '12px 30px', fontSize: '1.1rem', boxShadow: '0 10px 20px rgba(245, 158, 11, 0.3)' }}>Buy Play Pass</Link>
+              <a href="#" onClick={(e) => handleBuyClick(e, "Google Play Pass for Card")} className="btn btn-primary" style={{ padding: '12px 30px', fontSize: '1.1rem', boxShadow: '0 10px 20px rgba(245, 158, 11, 0.3)' }}>Buy Play Pass</a>
             </div>
           </div>
 

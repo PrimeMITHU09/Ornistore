@@ -1,41 +1,19 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getOrders, approveOrder, updateOrder } from '../utils/db';
 import { FiCheckCircle, FiClock, FiShield, FiLock, FiAlertTriangle } from 'react-icons/fi';
 
-const ADMIN_PASSWORD = 'orni808';
-
-const Admin = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [authError, setAuthError] = useState('');
-  const [shakeError, setShakeError] = useState(false);
+const Admin = ({ user, authLoading }) => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [cardInputs, setCardInputs] = useState({});
   const [activeTab, setActiveTab] = useState('vpn'); // 'vpn' | 'card'
 
-  // Check if already authenticated this session
-  useEffect(() => {
-    if (sessionStorage.getItem('admin_auth') === 'true') {
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  const handleAdminLogin = (e) => {
-    e.preventDefault();
-    if (passwordInput === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      sessionStorage.setItem('admin_auth', 'true');
-      setAuthError('');
-    } else {
-      setAuthError('Wrong password! Access denied.');
-      setShakeError(true);
-      setTimeout(() => setShakeError(false), 500);
-    }
-  };
+  const isAdmin = user && user.email === 'mithuchandra647@gmail.com';
 
   // Poll for new orders every 2 seconds to simulate realtime
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAdmin) return;
     const fetchOrders = async () => {
       const data = await getOrders();
       // Sort by newest first
@@ -47,7 +25,7 @@ const Admin = () => {
     fetchOrders();
     const interval = setInterval(fetchOrders, 2000);
     return () => clearInterval(interval);
-  }, [isAuthenticated]);
+  }, [isAdmin]);
 
   const handleInputChange = (orderId, field, value) => {
     setCardInputs(prev => ({
@@ -88,54 +66,42 @@ const Admin = () => {
   const pendingOrders = orders.filter(o => o.status === 'pending').length;
   const approvedOrders = orders.filter(o => o.status === 'approved').length;
 
-  // Password Gate UI
-  if (!isAuthenticated) {
+  if (authLoading) {
+    return (
+      <div className="page-content" style={{ paddingTop: '120px', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="glass-panel" style={{ padding: '40px', borderRadius: '24px', textAlign: 'center', color: '#fff' }}>
+          Loading admin panel...
+        </div>
+      </div>
+    );
+  }
+
+  // Access Restriction
+  if (!isAdmin) {
     return (
       <div className="page-content" style={{ paddingTop: '120px', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
         <div style={{ position: 'absolute', top: '20%', left: '15%', width: '300px', height: '300px', background: '#ef4444', filter: 'blur(180px)', opacity: 0.15, zIndex: 0 }}></div>
-        <div style={{ position: 'absolute', bottom: '20%', right: '10%', width: '250px', height: '250px', background: '#10b981', filter: 'blur(150px)', opacity: 0.1, zIndex: 0 }}></div>
         
         <div className="glass-panel" style={{ 
-          width: '100%', maxWidth: '420px', padding: '45px', borderRadius: '24px', 
+          width: '100%', maxWidth: '450px', padding: '45px', borderRadius: '24px', 
           position: 'relative', zIndex: 1, boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.6)',
-          animation: shakeError ? 'shakeAnim 0.4s ease-in-out' : 'none'
+          textAlign: 'center'
         }}>
-          <div style={{ textAlign: 'center', marginBottom: '35px' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '65px', height: '65px', borderRadius: '18px', background: 'linear-gradient(135deg, #ef4444, #dc2626)', marginBottom: '20px', boxShadow: '0 10px 25px rgba(239, 68, 68, 0.3)' }}>
-              <FiShield size={28} color="#fff" />
-            </div>
-            <h2 style={{ fontSize: '1.8rem', background: 'linear-gradient(135deg, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '8px' }}>
-              Admin Access
-            </h2>
-            <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Enter admin password to continue</p>
+          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '65px', height: '65px', borderRadius: '18px', background: 'linear-gradient(135deg, #ef4444, #dc2626)', marginBottom: '20px', boxShadow: '0 10px 25px rgba(239, 68, 68, 0.3)' }}>
+            <FiShield size={28} color="#fff" />
           </div>
-
-          <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            <div style={{ position: 'relative' }}>
-              <FiLock style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-              <input
-                type="password"
-                value={passwordInput}
-                onChange={(e) => { setPasswordInput(e.target.value); setAuthError(''); }}
-                placeholder="Enter admin password"
-                autoFocus
-                style={{ width: '100%', padding: '15px 15px 15px 45px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${authError ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '12px', color: '#fff', outline: 'none', fontSize: '1rem', transition: 'all 0.3s ease' }}
-                onFocus={(e) => e.target.style.borderColor = authError ? 'rgba(239,68,68,0.5)' : 'var(--secondary-color)'}
-                onBlur={(e) => e.target.style.borderColor = authError ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.1)'}
-              />
-            </div>
-
-            {authError && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444', fontSize: '0.9rem', padding: '10px 14px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '10px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                <FiAlertTriangle size={16} />
-                {authError}
-              </div>
-            )}
-
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '15px', borderRadius: '12px', fontSize: '1.05rem', background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)' }}>
-              <FiLock style={{ marginRight: '8px' }} /> Unlock Admin Panel
-            </button>
-          </form>
+          <h2 style={{ fontSize: '1.8rem', background: 'linear-gradient(135deg, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '15px' }}>
+            Access Denied
+          </h2>
+          <p style={{ color: '#cbd5e1', fontSize: '1rem', marginBottom: '20px', lineHeight: '1.6' }}>
+            You do not have permission to view this page. Only the administrator account <strong>mithuchandra647@gmail.com</strong> is allowed access.
+          </p>
+          <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '25px' }}>
+            {user ? `Currently logged in as: ${user.email}` : 'You are not logged in.'}
+          </p>
+          <button onClick={() => navigate('/auth')} className="btn btn-primary" style={{ width: '100%', padding: '14px', borderRadius: '12px' }}>
+            Log In as Admin
+          </button>
         </div>
       </div>
     );

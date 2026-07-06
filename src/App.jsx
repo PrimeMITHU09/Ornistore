@@ -132,15 +132,16 @@ function App() {
         toggleCart={toggleCart} 
         cartItems={cartItems} 
         removeFromCart={removeFromCart}
+        isLoggedIn={isLoggedIn}
       />
       <PageTransition>
         <Routes>
-            <Route path="/" element={<Home addToCart={addToCart} />} />
-            <Route path="/products" element={<Products addToCart={addToCart} />} />
+            <Route path="/" element={<Home addToCart={addToCart} isLoggedIn={isLoggedIn} />} />
+            <Route path="/products" element={<Products addToCart={addToCart} isLoggedIn={isLoggedIn} />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/track" element={<TrackOrder />} />
-            <Route path="/checkout" element={<Checkout clearCart={clearCart} user={currentUser} />} />
-            <Route path="/admin" element={<Admin />} />
+            <Route path="/checkout" element={<Checkout clearCart={clearCart} user={currentUser} authLoading={authLoading} />} />
+            <Route path="/admin" element={<Admin user={currentUser} authLoading={authLoading} />} />
             <Route path="/auth" element={<Auth handleLogin={handleLogin} />} />
             <Route path="/profile" element={<Profile user={currentUser} onProfileSave={onProfileSave} authLoading={authLoading} />} />
             <Route path="/my-orders" element={<MyOrders user={currentUser} authLoading={authLoading} />} />

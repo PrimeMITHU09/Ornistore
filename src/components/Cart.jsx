@@ -1,12 +1,17 @@
 import { FiX, FiTrash2 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
-const Cart = ({ isOpen, toggleCart, cartItems, removeFromCart }) => {
+const Cart = ({ isOpen, toggleCart, cartItems, removeFromCart, isLoggedIn }) => {
   const total = cartItems.reduce((sum, item) => sum + item.price, 0);
   const navigate = useNavigate();
 
   const handleCheckout = () => {
     toggleCart();
+    if (!isLoggedIn) {
+      alert("Please login or sign up first to checkout!");
+      navigate('/auth');
+      return;
+    }
     navigate('/checkout', { state: { items: cartItems, total: total } });
   };
 
