@@ -24,7 +24,7 @@ export const saveOrder = async (order) => {
     return docRef.id;
   } catch (error) {
     console.error("Error saving order:", error);
-    return null;
+    return { error: error.message };
   }
 };
 
