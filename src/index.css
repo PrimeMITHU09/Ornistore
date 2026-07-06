@@ -1267,3 +1267,18 @@ button {
 .tip-card {
   margin-bottom: 10px;
 }
+
+/* Social Icons */
+.social-icon {
+  font-size: 1.5rem;
+  color: #fff;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.social-icon:hover {
+  color: var(--secondary-color);
+  transform: translateY(-3px);
+  text-shadow: 0 0 10px var(--secondary-color);
+}
