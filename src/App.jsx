@@ -12,6 +12,7 @@ import Auth from './pages/Auth';
 import TrackOrder from './pages/TrackOrder';
 import Profile from './pages/Profile';
 import MyOrders from './pages/MyOrders';
+import LiveSupport from './components/LiveSupport';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -148,6 +149,7 @@ function App() {
         </Routes>
       </PageTransition>
       <Footer />
+      <LiveSupport />
     </Router>
   );
 }
